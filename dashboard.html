@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Gantari Content Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Dashboard Section -->
+        <section id="dashboard-section">
+            <nav class="top-nav glass-panel">
+                <div class="brand-small">GANTARI</div>
+                <div class="user-menu">
+                    <span id="user-name">Welcome, Admin</span>
+                    <button id="btn-logout" class="btn-text">Logout</button>
+                </div>
+            </nav>
+
+            <main class="dashboard-content">
+                <header class="dashboard-header">
+                    <h2>Projects Overview</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="btn-sync-drive" class="btn-outline" style="border-color: var(--color-gold); color: var(--color-gold);">Sync from Drive</button>
+                        <button id="btn-new-project" class="btn-primary">+ New Project</button>
+                    </div>
+                </header>
+
+                <div id="projects-container" class="projects-grid">
+                    <!-- Project cards will be injected here -->
+                </div>
+            </main>
+        </section>
+
+        <!-- New Project Modal -->
+        <div id="modal-new-project" class="modal" style="display: none;">
+            <div class="modal-content glass-panel">
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+                <h3>Create New Project Folder</h3>
+                <form id="new-project-form">
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                        <div class="input-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Bride Name</label>
+                            <input type="text" id="bride-name" placeholder="e.g. Risa" required>
+                        </div>
+                        <div class="input-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Groom Name</label>
+                            <input type="text" id="groom-name" placeholder="e.g. Bambang" required>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Event Date</label>
+                        <input type="date" id="event-date" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Events (Comma separated, e.g. Meeting 1, Gladi, Akad, Resepsi)</label>
+                        <input type="text" id="project-events" value="Meeting 1, Gladi, Akad, Resepsi" required>
+                    </div>
+                    <button type="submit" class="btn-primary" id="btn-create-folder">Create in Google Drive</button>
+                </form>
+                <div id="modal-status"></div>
+            </div>
+        </div>
+
+        <!-- Sync Loading Modal -->
+        <div id="modal-loading" class="modal" style="display: none; align-items: center; justify-content: center; z-index: 9999;">
+            <div class="glass-panel" style="padding: 40px; text-align: center; border-color: var(--color-gold); min-width: 300px;">
+                <h3 style="color: var(--color-gold); margin-bottom: 10px;">Syncing with Drive...</h3>
+                <p style="color: var(--color-text-muted);">Mohon tunggu sebentar...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Setup -->
+    <script type="module" src="dashboard.js?v=11"></script>
+
+    <script>
+        function closeModal() {
+            document.getElementById('modal-new-project').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

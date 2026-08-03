@@ -1,0 +1,303 @@
+/* CSS Variables for Black and Gold Theme */
+:root {
+    --color-bg: #0a0a0a;
+    --color-bg-secondary: #121212;
+    --color-gold: #D4AF37;
+    --color-gold-light: #F3E5AB;
+    --color-gold-dark: #AA8222;
+    --color-text: #FFFFFF;
+    --color-text-muted: #A0A0A0;
+    --color-border: rgba(212, 175, 55, 0.2);
+    --glass-bg: rgba(18, 18, 18, 0.7);
+    --glass-border: rgba(212, 175, 55, 0.15);
+    
+    --font-main: 'Outfit', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+    border-radius: 16px;
+}
+
+/* Typography */
+h1, h2, h3, h4 {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.brand h1 {
+    font-size: 3rem;
+    background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.2rem;
+}
+
+.brand p {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    letter-spacing: 2px;
+}
+
+/* Auth Section */
+#auth-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: radial-gradient(circle at top left, rgba(212,175,55,0.05), transparent 40%),
+                radial-gradient(circle at bottom right, rgba(212,175,55,0.05), transparent 40%);
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 2.5rem;
+    text-align: center;
+}
+
+.tabs {
+    display: flex;
+    margin: 2rem 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.tabs button {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    padding: 0.8rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: var(--font-main);
+}
+
+.tabs button.active {
+    color: var(--color-gold);
+    border-bottom: 2px solid var(--color-gold);
+}
+
+/* Forms */
+.input-group {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+.input-group input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    color: var(--color-text);
+    font-family: var(--font-main);
+    transition: border-color 0.3s ease;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--color-gold);
+    background: rgba(212, 175, 55, 0.05);
+}
+
+/* Buttons */
+.btn-primary {
+    width: 100%;
+    padding: 0.9rem;
+    background: linear-gradient(135deg, var(--color-gold), var(--color-gold-dark));
+    border: none;
+    border-radius: 8px;
+    color: var(--color-bg);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    font-family: var(--font-main);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+}
+
+.btn-outline {
+    padding: 0.6rem 1.2rem;
+    background: transparent;
+    border: 1px solid var(--color-gold);
+    color: var(--color-gold);
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font-main);
+    transition: all 0.3s ease;
+}
+
+.btn-outline:hover {
+    background: var(--color-gold);
+    color: var(--color-bg);
+}
+
+.btn-text {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    font-family: var(--font-main);
+}
+.btn-text:hover {
+    color: var(--color-text);
+}
+
+/* Dashboard */
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    margin: 1rem;
+}
+
+.brand-small {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-gold);
+}
+
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.dashboard-content {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Project Card */
+.project-card {
+    padding: 1.5rem;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+.project-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(212, 175, 55, 0.4);
+}
+
+.project-title {
+    font-size: 1.2rem;
+    color: var(--color-gold-light);
+    margin-bottom: 1rem;
+}
+
+.event-list {
+    list-style: none;
+    margin-top: 1rem;
+}
+
+.event-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.event-name {
+    font-size: 0.9rem;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.status-done {
+    background: rgba(46, 213, 115, 0.2);
+    color: #2ed573;
+}
+.status-pending {
+    background: rgba(255, 165, 2, 0.2);
+    color: #ffa502;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    width: 100%;
+    max-width: 500px;
+    padding: 2rem;
+    position: relative;
+}
+
+.close-btn {
+    position: absolute;
+    top: 1rem; right: 1.5rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--color-text-muted);
+}
+.close-btn:hover {
+    color: var(--color-text);
+}
+
+.error-msg {
+    color: #ff4757;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+}
