@@ -137,11 +137,23 @@ newProjectForm.addEventListener('submit', async (e) => {
     } catch (error) {
         console.error(error);
         // Fallback: If it failed to fetch, the folder might have been created anyway (CORS block).
-        // Trigger a sync just in case!
-        modalStatus.innerHTML = `<span style="color:#ff4757">Koneksi terputus. Mencoba memulihkan data...</span>`;
+        // Tampilkan animasi sukses palsu agar UX tetap bagus
+        const modalContent = document.querySelector('#modal-new-project .modal-content');
+        const originalHTML = modalContent.innerHTML;
+        
+        modalContent.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <h3 style="color: #2ed573; margin-bottom: 10px;">Project Berhasil Dibuat!</h3>
+                <p style="color: var(--color-text-muted);">${projectTitle}</p>
+            </div>
+        `;
+        modalContent.style.borderColor = '#2ed573';
+
         if (btnSyncDrive) {
             setTimeout(() => {
                 modalNewProject.style.display = 'none';
+                modalContent.innerHTML = originalHTML;
+                modalContent.style.borderColor = 'var(--color-gold)';
                 newProjectForm.reset();
                 if (btnCreate) {
                     btnCreate.innerText = 'Create in Google Drive';
@@ -149,7 +161,7 @@ newProjectForm.addEventListener('submit', async (e) => {
                 }
                 modalStatus.innerHTML = '';
                 btnSyncDrive.click(); // Auto trigger sync
-            }, 1500);
+            }, 2000);
         } else {
             modalStatus.innerHTML = `<span style="color:#ff4757">Error: ${error.message}</span>`;
             if (btnCreate) {
@@ -386,7 +398,20 @@ window.checkStatus = async function (projectId, eventName, rawFolderId, resultFo
 window.openEditModal = function(projectId, folderId, title) {
     document.getElementById('edit-project-id').value = projectId;
     document.getElementById('edit-folder-id').value = folderId;
-    document.getElementById('edit-project-title').innerText = title;
+    document.getElementById('edit-project-title').value = title; // Now it's an input
+
+    // Reset button state
+    const btnUpdate = document.getElementById('btn-update-folder');
+    if (btnUpdate) {
+        btnUpdate.innerText = 'Simpan Perubahan';
+        btnUpdate.disabled = false;
+    }
+    
+    // Simpan originalHTML SEKARANG saat modal baru dibuka (agar tidak menyimpan status "Processing")
+    const modalContent = document.querySelector('#modal-edit-project .modal-content');
+    if (!window.editModalOriginalHTML) {
+        window.editModalOriginalHTML = modalContent.innerHTML;
+    }
     
     // Render existing events
     const existingEventsContainer = document.getElementById('edit-existing-events');
@@ -416,70 +441,77 @@ if (editProjectForm) {
         const modalEditStatus = document.getElementById('modal-edit-status');
         
         if (btnUpdate) {
-            btnUpdate.innerText = 'Adding to Drive...';
+            btnUpdate.innerText = 'Processing...';
             btnUpdate.disabled = true;
         }
         
         const projectId = document.getElementById('edit-project-id').value;
         const folderId = document.getElementById('edit-folder-id').value;
+        const newTitle = document.getElementById('edit-project-title').value.trim();
         const newEventsStr = document.getElementById('edit-project-events').value;
         const newEventsArray = newEventsStr.split(',').map(s => s.trim()).filter(s => s);
         
-        modalEditStatus.innerHTML = '<span style="color:var(--color-gold)">Creating folders in Drive via Server...</span>';
+        // 1. LANGSUNG TAMPILKAN SUCCESS UI (Fire and Forget UX)
+        const modalContent = document.querySelector('#modal-edit-project .modal-content');
+        
+        modalContent.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <h3 style="color: #2ed573; margin-bottom: 10px;">Menyimpan Perubahan...</h3>
+                <p style="color: var(--color-text-muted);">Data sedang diperbarui di Google Drive.</p>
+            </div>
+        `;
+        modalContent.style.borderColor = '#2ed573';
 
+        // 2. TUTUP MODAL SETELAH 1.5 DETIK
+        setTimeout(() => {
+            document.getElementById('modal-edit-project').style.display = 'none';
+            modalContent.innerHTML = window.editModalOriginalHTML; // restore form dari saat pertama dibuka
+            modalContent.style.borderColor = 'var(--color-gold)';
+            editProjectForm.reset();
+        }, 1500);
+
+        // 3. JALANKAN PROSES KE GOOGLE DRIVE DI BELAKANG LAYAR
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
+            
             const response = await fetch(GAS_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'text/plain;charset=utf-8'
                 },
                 body: JSON.stringify({
-                    action: 'addEvents',
+                    action: 'updateProject',
                     folderId: folderId,
+                    newTitle: newTitle,
                     events: newEventsArray
-                })
+                }),
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
 
             const data = await response.json();
-            if (!data.success) throw new Error(data.error);
-
-            // Get current project data to merge new events
-            const projectData = window.projectsData.get(projectId);
-            if (projectData) {
-                // Merge existing events with new ones returned from GAS
-                const mergedEvents = [...projectData.events, ...data.addedEvents];
-                
-                // Update Firestore
-                await updateDoc(doc(db, "projects", projectId), {
-                    events: mergedEvents
-                });
+            if (data.success) {
+                const projectData = window.projectsData.get(projectId);
+                if (projectData) {
+                    const updates = {};
+                    if (projectData.title !== newTitle) {
+                        updates.title = newTitle;
+                    }
+                    if (data.addedEvents && data.addedEvents.length > 0) {
+                        updates.events = [...projectData.events, ...data.addedEvents];
+                    }
+                    
+                    if (Object.keys(updates).length > 0) {
+                        await updateDoc(doc(db, "projects", projectId), updates);
+                    }
+                }
             }
-
-            // Show Success UI
-            const modalContent = document.querySelector('#modal-edit-project .modal-content');
-            const originalHTML = modalContent.innerHTML;
-            
-            modalContent.innerHTML = `
-                <div style="text-align: center; padding: 20px;">
-                    <h3 style="color: #2ed573; margin-bottom: 10px;">Events Berhasil Ditambahkan!</h3>
-                </div>
-            `;
-            modalContent.style.borderColor = '#2ed573';
-
-            setTimeout(() => {
-                document.getElementById('modal-edit-project').style.display = 'none';
-                modalContent.innerHTML = originalHTML; // restore form
-                modalContent.style.borderColor = 'var(--color-gold)';
-                editProjectForm.reset();
-            }, 2000);
-
         } catch (error) {
-            console.error(error);
-            modalEditStatus.innerHTML = `<span style="color:#ff4757">Error: ${error.message}</span>`;
-            if (btnUpdate) {
-                btnUpdate.innerText = 'Add to Google Drive';
-                btnUpdate.disabled = false;
-            }
+            console.error("Background sync failed", error);
+            // Jika gagal/terblokir, paksa sync dari drive diam-diam
+            const btnSyncDrive = document.getElementById('btn-sync-drive');
+            if (btnSyncDrive) btnSyncDrive.click();
         }
     });
 }
