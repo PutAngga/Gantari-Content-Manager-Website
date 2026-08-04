@@ -71,7 +71,7 @@ newProjectForm.addEventListener('submit', async (e) => {
 
     const btnCreate = document.getElementById('btn-create-folder');
     if (btnCreate) {
-        btnCreate.innerText = '⏳ Creating...';
+        btnCreate.innerText = 'Creating...';
         btnCreate.disabled = true;
     }
 
@@ -121,7 +121,7 @@ newProjectForm.addEventListener('submit', async (e) => {
         
         modalContent.innerHTML = `
             <div style="text-align: center; padding: 20px;">
-                <h3 style="color: #2ed573; margin-bottom: 10px;">✨ Project Berhasil Dibuat!</h3>
+                <h3 style="color: #2ed573; margin-bottom: 10px;">Project Berhasil Dibuat!</h3>
                 <p style="color: var(--color-text-muted);">${projectTitle}</p>
             </div>
         `;
@@ -184,11 +184,14 @@ function loadProjects() {
             project.events.forEach(evt => {
                 const statusClass = evt.status === 'done' ? 'status-done' : 'status-pending';
                 const statusText = evt.status === 'done' ? 'Selesai' : 'Belum Selesai';
+                
+                // Fallback ke rawFolderId jika folderId event belum tersimpan di database
+                const targetDriveId = evt.folderId || evt.rawFolderId;
 
                 eventsHtml += `
                     <li class="event-item">
                         <div>
-                            <div class="event-name">${evt.name}</div>
+                            <a href="https://drive.google.com/drive/folders/${targetDriveId}" target="_blank" class="event-name" style="text-decoration: none; color: inherit; transition: opacity 0.2s ease; display: inline-block; margin-bottom: 3px;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" title="Buka folder event ini di Google Drive">${evt.name}</a>
                             <div style="font-size: 0.75rem; color: var(--color-text-muted);">Raw files: ${evt.rawCount}</div>
                         </div>
                         <span class="status-badge ${statusClass}">${statusText}</span>
@@ -201,7 +204,10 @@ function loadProjects() {
             });
 
             card.innerHTML = `
-                <div class="project-title">${project.title}</div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                    <a href="https://drive.google.com/drive/folders/${project.folderId}" target="_blank" class="project-title" style="text-decoration: none; transition: opacity 0.2s ease; margin-bottom: 0;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" title="Buka folder di Google Drive">${project.title}</a>
+                    <button class="btn-outline" style="font-size: 0.8rem; padding: 0.3rem 0.8rem; margin-left: 10px;" onclick="window.openEditModal('${projectId}', '${project.folderId}', '${project.title.replace(/'/g, "\\'")}')">Edit</button>
+                </div>
                 <ul class="event-list">
                     ${eventsHtml}
                 </ul>
@@ -268,7 +274,7 @@ if (btnSyncDrive) {
             if (modalLoading) {
                 modalLoading.innerHTML = `
                     <div class="glass-panel" style="padding: 40px; text-align: center; border-color: #2ed573; min-width: 300px;">
-                        <h3 style="color: #2ed573; margin-bottom: 10px;">✨ Sync Berhasil!</h3>
+                        <h3 style="color: #2ed573; margin-bottom: 10px;">Sync Berhasil!</h3>
                         <p style="color: var(--color-text-muted);">${syncedCount} proyek baru dimuat.</p>
                     </div>`;
                 
@@ -286,7 +292,7 @@ if (btnSyncDrive) {
             if (modalLoading) {
                 modalLoading.innerHTML = `
                     <div class="glass-panel" style="padding: 40px; text-align: center; border-color: #ff4757; min-width: 300px;">
-                        <h3 style="color: #ff4757; margin-bottom: 10px;">❌ Sync Gagal</h3>
+                        <h3 style="color: #ff4757; margin-bottom: 10px;">Sync Gagal</h3>
                         <p style="color: var(--color-text-muted);">${errMsg}</p>
                     </div>`;
                 
@@ -320,7 +326,7 @@ window.checkStatus = async function (projectId, eventName, rawFolderId, resultFo
     });
     
     if (targetButton) {
-        targetButton.innerText = '⏳ Memeriksa...';
+        targetButton.innerText = 'Memeriksa...';
         targetButton.disabled = true;
     }
 
@@ -375,3 +381,106 @@ window.checkStatus = async function (projectId, eventName, rawFolderId, resultFo
         }
     }
 }
+
+// Open Edit Modal
+window.openEditModal = function(projectId, folderId, title) {
+    document.getElementById('edit-project-id').value = projectId;
+    document.getElementById('edit-folder-id').value = folderId;
+    document.getElementById('edit-project-title').innerText = title;
+    
+    // Render existing events
+    const existingEventsContainer = document.getElementById('edit-existing-events');
+    existingEventsContainer.innerHTML = '';
+    const projectData = window.projectsData.get(projectId);
+    if (projectData && projectData.events) {
+        projectData.events.forEach(evt => {
+            const tag = document.createElement('span');
+            tag.style.cssText = 'background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; color: var(--color-gold-light); display: inline-block;';
+            tag.innerText = evt.name;
+            existingEventsContainer.appendChild(tag);
+        });
+    }
+
+    document.getElementById('edit-project-events').value = '';
+    document.getElementById('modal-edit-status').innerHTML = '';
+    document.getElementById('modal-edit-project').style.display = 'flex';
+}
+
+// Submit Edit Project (Add Events)
+const editProjectForm = document.getElementById('edit-project-form');
+if (editProjectForm) {
+    editProjectForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const btnUpdate = document.getElementById('btn-update-folder');
+        const modalEditStatus = document.getElementById('modal-edit-status');
+        
+        if (btnUpdate) {
+            btnUpdate.innerText = 'Adding to Drive...';
+            btnUpdate.disabled = true;
+        }
+        
+        const projectId = document.getElementById('edit-project-id').value;
+        const folderId = document.getElementById('edit-folder-id').value;
+        const newEventsStr = document.getElementById('edit-project-events').value;
+        const newEventsArray = newEventsStr.split(',').map(s => s.trim()).filter(s => s);
+        
+        modalEditStatus.innerHTML = '<span style="color:var(--color-gold)">Creating folders in Drive via Server...</span>';
+
+        try {
+            const response = await fetch(GAS_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8'
+                },
+                body: JSON.stringify({
+                    action: 'addEvents',
+                    folderId: folderId,
+                    events: newEventsArray
+                })
+            });
+
+            const data = await response.json();
+            if (!data.success) throw new Error(data.error);
+
+            // Get current project data to merge new events
+            const projectData = window.projectsData.get(projectId);
+            if (projectData) {
+                // Merge existing events with new ones returned from GAS
+                const mergedEvents = [...projectData.events, ...data.addedEvents];
+                
+                // Update Firestore
+                await updateDoc(doc(db, "projects", projectId), {
+                    events: mergedEvents
+                });
+            }
+
+            // Show Success UI
+            const modalContent = document.querySelector('#modal-edit-project .modal-content');
+            const originalHTML = modalContent.innerHTML;
+            
+            modalContent.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <h3 style="color: #2ed573; margin-bottom: 10px;">Events Berhasil Ditambahkan!</h3>
+                </div>
+            `;
+            modalContent.style.borderColor = '#2ed573';
+
+            setTimeout(() => {
+                document.getElementById('modal-edit-project').style.display = 'none';
+                modalContent.innerHTML = originalHTML; // restore form
+                modalContent.style.borderColor = 'var(--color-gold)';
+                editProjectForm.reset();
+            }, 2000);
+
+        } catch (error) {
+            console.error(error);
+            modalEditStatus.innerHTML = `<span style="color:#ff4757">Error: ${error.message}</span>`;
+            if (btnUpdate) {
+                btnUpdate.innerText = 'Add to Google Drive';
+                btnUpdate.disabled = false;
+            }
+        }
+    });
+}
+

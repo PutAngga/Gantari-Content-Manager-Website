@@ -301,3 +301,9 @@ h1, h2, h3, h4 {
     margin-top: 1rem;
     font-size: 0.9rem;
 }
+
+/* Custom Calendar Icon */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(72%) sepia(85%) saturate(350%) hue-rotate(352deg) brightness(97%) contrast(89%);
+    cursor: pointer;
+}
